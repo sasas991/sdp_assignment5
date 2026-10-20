@@ -1,6 +1,5 @@
 package org.example.selection;
 
-import java.util.Comparator;
 import java.util.List;
 import org.example.model.Car;
 import org.example.model.RentalRequest;
@@ -14,15 +13,16 @@ public class CarSelectionSelector {
     }
 
     public Car select(List<Car> cars, RentalRequest request) {
+        return new CarSelectionContext(selectStrategy(request)).select(cars, request);
+    }
+
+    public CarSelectionStrategy selectStrategy(RentalRequest request) {
         if (request.hoursUntilPickup() <= 2) {
-            return cars.stream()
-                    .min(Comparator.comparingInt(car -> travelTimeProvider.minutesTo(
-                            request.pickupLocation(), car.pickupLocation())))
-                    .orElseThrow();
+            return new FastestPickupCar(travelTimeProvider);
         } else if (request.budgetPriority()) {
-            return cars.stream().min(Comparator.comparingDouble(Car::dailyRate)).orElseThrow();
+            return new CheapestCar();
         } else {
-            return cars.stream().max(Comparator.comparingDouble(Car::rating)).orElseThrow();
+            return new HighestRatedCar();
         }
     }
 }
